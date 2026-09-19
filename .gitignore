@@ -1,0 +1,34 @@
+# Node modules
+node_modules/
+*/node_modules/
+
+# Environment variables (ŞİFRELER BURADA!)
+.env
+*.env
+backend/.env
+frontend/.env
+
+# Build outputs
+dist/
+build/
+frontend/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+.vite/
+*.local
