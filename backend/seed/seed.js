@@ -19,7 +19,7 @@ const seedData = async () => {
       await User.create({
         username: 'admin',
         name: 'Sistem Yöneticisi',
-        password: 'admin123',
+        password: 'Admin1987x',
         role: 'yonetici',
       });
       console.log('👤 Admin oluşturuldu: admin / admin123');
