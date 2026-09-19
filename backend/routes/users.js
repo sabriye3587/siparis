@@ -2,10 +2,9 @@ const router = require('express').Router();
 const User = require('../models/User');
 const { protect, isAdmin } = require('../middleware/auth');
 
-// Tüm route'lar korumalı + admin
 router.use(protect, isAdmin);
 
-// @route   GET /api/users — Tüm kullanıcıları listele
+// Tüm kullanıcıları listele
 router.get('/', async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -15,23 +14,23 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @route   POST /api/users — Yeni kullanıcı ekle
+// Yeni kullanıcı ekle
 router.post('/', async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { username, name, password, role } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Ad, e-posta ve şifre gerekli' });
+    if (!username || !name || !password) {
+      return res.status(400).json({ message: 'Kullanıcı adı, ad ve şifre gerekli' });
     }
 
-    const exists = await User.findOne({ email });
+    const exists = await User.findOne({ username });
     if (exists) {
-      return res.status(400).json({ message: 'Bu e-posta zaten kayıtlı' });
+      return res.status(400).json({ message: 'Bu kullanıcı adı zaten kayıtlı' });
     }
 
     const user = await User.create({
+      username,
       name,
-      email,
       password,
       role: role || 'talep_kullanici',
     });
@@ -42,16 +41,16 @@ router.post('/', async (req, res) => {
   }
 });
 
-// @route   PUT /api/users/:id — Kullanıcı güncelle
+// Kullanıcı güncelle
 router.put('/:id', async (req, res) => {
   try {
-    const { name, email, role, active } = req.body;
+    const { username, name, role, active } = req.body;
     const user = await User.findById(req.params.id);
 
     if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
 
+    if (username) user.username = username;
     if (name) user.name = name;
-    if (email) user.email = email;
     if (role) user.role = role;
     if (typeof active === 'boolean') user.active = active;
 
@@ -62,7 +61,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// @route   PUT /api/users/:id/reset-password — Admin şifre sıfırlar
+// Admin şifre sıfırlar
 router.put('/:id/reset-password', async (req, res) => {
   try {
     const { newPassword } = req.body;
@@ -82,7 +81,7 @@ router.put('/:id/reset-password', async (req, res) => {
   }
 });
 
-// @route   DELETE /api/users/:id — Kullanıcı sil
+// Kullanıcı sil
 router.delete('/:id', async (req, res) => {
   try {
     if (req.params.id === req.user._id.toString()) {

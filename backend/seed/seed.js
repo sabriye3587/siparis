@@ -11,40 +11,35 @@ const Supplier = require('../models/Supplier');
 const seedData = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ MongoDB bağlandı');
-
-    // Mevcut verileri temizle (opsiyonel)
-    // await User.deleteMany();
-    // await Item.deleteMany();
-    // await Supplier.deleteMany();
+    console.log('✅ MongoDB bağlandı\n');
 
     // === 1. ADMİN KULLANICI ===
-    const adminExists = await User.findOne({ email: 'admin@stok.com' });
+    const adminExists = await User.findOne({ username: 'admin' });
     if (!adminExists) {
       await User.create({
+        username: 'admin',
         name: 'Sistem Yöneticisi',
-        email: 'admin@stok.com',
-        password: 'Admin1987x', // ← BURAYI DEĞİŞTİR!
+        password: 'admin123',
         role: 'yonetici',
       });
-      console.log('👤 Admin oluşturuldu: admin@stok.com / admin123');
+      console.log('👤 Admin oluşturuldu: admin / admin123');
     } else {
       console.log('ℹ️  Admin zaten var');
     }
 
     // === 2. ÖRNEK KULLANICILAR ===
     const users = [
-      { name: 'Ahmet Satın Alma', email: 'satinalma@stok.com', password: '123456', role: 'satinalma_muduru' },
-      { name: 'Mehmet Depo', email: 'depo@stok.com', password: '123456', role: 'depo_sorumlusu' },
-      { name: 'Ayşe Üretim', email: 'uretim@stok.com', password: '123456', role: 'uretim_sorumlusu' },
-      { name: 'Zeynep Talep', email: 'zeynep@stok.com', password: '123456', role: 'talep_kullanici' },
+      { username: 'ahmet', name: 'Ahmet Satın Alma', password: '123456', role: 'satinalma_muduru' },
+      { username: 'mehmet', name: 'Mehmet Depo', password: '123456', role: 'depo_sorumlusu' },
+      { username: 'ayse', name: 'Ayşe Üretim', password: '123456', role: 'uretim_sorumlusu' },
+      { username: 'zeynep', name: 'Zeynep Talep', password: '123456', role: 'talep_kullanici' },
     ];
 
     for (const u of users) {
-      const exists = await User.findOne({ email: u.email });
+      const exists = await User.findOne({ username: u.username });
       if (!exists) {
         await User.create(u);
-        console.log(`👤 Kullanıcı eklendi: ${u.email}`);
+        console.log(`👤 Kullanıcı eklendi: ${u.username} / ${u.password}`);
       }
     }
 
@@ -81,12 +76,12 @@ const seedData = async () => {
     }
 
     console.log('\n✅ Seed işlemi tamamlandı!\n');
-    console.log('📋 GİRİŞ BİLGİLERİ:');
-    console.log('   Admin:     admin@stok.com / admin123');
-    console.log('   Sat.Alma:  satinalma@stok.com / 123456');
-    console.log('   Depo:      depo@stok.com / 123456');
-    console.log('   Üretim:    uretim@stok.com / 123456');
-    console.log('   Talep:     zeynep@stok.com / 123456\n');
+    console.log('📋 GİRİŞ BİLGİLERİ (Kullanıcı Adı / Şifre):');
+    console.log('   Admin:     admin / admin123');
+    console.log('   Sat.Alma:  ahmet / 123456');
+    console.log('   Depo:      mehmet / 123456');
+    console.log('   Üretim:    ayse / 123456');
+    console.log('   Talep:     zeynep / 123456\n');
 
     process.exit(0);
   } catch (error) {

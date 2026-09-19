@@ -16,6 +16,7 @@ import {
   Filter,
   ChevronDown,
   ShieldAlert,
+  User as UserIcon,
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -30,7 +31,7 @@ const ROLES = {
 
 const EMPTY_FORM = {
   name: '',
-  email: '',
+  username: '',
   password: '',
   role: 'talep_kullanici',
   active: true,
@@ -38,11 +39,11 @@ const EMPTY_FORM = {
 
 // Mock kullanıcılar (backend yoksa gösterilir)
 const MOCK_USERS = [
-  { _id: '1', name: 'Sistem Yöneticisi', email: 'admin@stok.com', password: 'admin123', role: 'yonetici', active: true, createdAt: '2026-09-01' },
-  { _id: '2', name: 'Ahmet Satın Alma', email: 'satinalma@stok.com', password: '123456', role: 'satinalma_muduru', active: true, createdAt: '2026-09-05' },
-  { _id: '3', name: 'Mehmet Depo', email: 'depo@stok.com', password: '123456', role: 'depo_sorumlusu', active: true, createdAt: '2026-09-08' },
-  { _id: '4', name: 'Ayşe Üretim', email: 'uretim@stok.com', password: '123456', role: 'uretim_sorumlusu', active: true, createdAt: '2026-09-10' },
-  { _id: '5', name: 'Zeynep Talep', email: 'zeynep@stok.com', password: '123456', role: 'talep_kullanici', active: false, createdAt: '2026-09-12' },
+  { _id: '1', name: 'Sistem Yöneticisi', username: 'admin', password: 'admin123', role: 'yonetici', active: true, createdAt: '2026-09-01' },
+  { _id: '2', name: 'Ahmet Satın Alma', username: 'ahmet', password: '123456', role: 'satinalma_muduru', active: true, createdAt: '2026-09-05' },
+  { _id: '3', name: 'Mehmet Depo', username: 'mehmet', password: '123456', role: 'depo_sorumlusu', active: true, createdAt: '2026-09-08' },
+  { _id: '4', name: 'Ayşe Üretim', username: 'ayse', password: '123456', role: 'uretim_sorumlusu', active: true, createdAt: '2026-09-10' },
+  { _id: '5', name: 'Zeynep Talep', username: 'zeynep', password: '123456', role: 'talep_kullanici', active: false, createdAt: '2026-09-12' },
 ];
 
 export default function AdminUsers() {
@@ -114,7 +115,7 @@ export default function AdminUsers() {
   const openEditModal = (user) => {
     setForm({
       name: user.name || '',
-      email: user.email || '',
+      username: user.username || '',
       password: user.password || '',
       role: user.role || 'talep_kullanici',
       active: user.active !== false,
@@ -129,8 +130,12 @@ export default function AdminUsers() {
     e.preventDefault();
     setError('');
 
-    if (!form.name.trim() || !form.email.trim()) {
-      setError('Ad ve e-posta zorunludur');
+    if (!form.name.trim() || !form.username.trim()) {
+      setError('Ad Soyad ve kullanıcı adı zorunludur');
+      return;
+    }
+    if (form.username.length < 3) {
+      setError('Kullanıcı adı en az 3 karakter olmalı');
       return;
     }
     if (!editingId && !form.password) {
@@ -196,7 +201,7 @@ export default function AdminUsers() {
     const q = search.toLowerCase();
     const matchSearch =
       u.name?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q);
+      u.username?.toLowerCase().includes(q);
     const matchRole = !roleFilter || u.role === roleFilter;
     return matchSearch && matchRole;
   });
@@ -294,7 +299,7 @@ export default function AdminUsers() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
-            placeholder="Ad veya e-posta ara..."
+            placeholder="Ad veya kullanıcı adı ara..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -334,8 +339,12 @@ export default function AdminUsers() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Kullanıcı</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">E-posta</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Ad Soyad</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <UserIcon size={14} /> Kullanıcı Adı
+                    </span>
+                  </th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">
                     <span className="flex items-center gap-1">
                       <KeyRound size={14} /> Şifre
@@ -365,7 +374,9 @@ export default function AdminUsers() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">{u.email}</td>
+                      <td className="px-4 py-3 text-gray-600 font-mono text-xs">
+                        {u.username}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs bg-gray-50 px-2 py-1 rounded border border-gray-200 text-gray-700 min-w-[90px] inline-block">
@@ -478,16 +489,20 @@ export default function AdminUsers() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    E-posta <span className="text-red-500">*</span>
+                    Kullanıcı Adı <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="ornek@stok.com"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    type="text"
+                    value={form.username}
+                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    placeholder="Örn: ahmet"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                     required
+                    minLength={3}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    En az 3 karakter, boşluk olmadan
+                  </p>
                 </div>
 
                 <div>
