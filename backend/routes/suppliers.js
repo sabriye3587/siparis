@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', isAdmin, async (req, res) => {
   try {
-    const supplier = await Supplier.create(req.body);
+    const supplier = await Supplier.create(req.body);   // ✅ req.body tamamen
     res.status(201).json(supplier);
   } catch (error) {
     res.status(400).json({ message: error.message });

@@ -22,7 +22,7 @@ const seedData = async () => {
         password: 'Admin1987x',
         role: 'yonetici',
       });
-      console.log('👤 Admin oluşturuldu: admin / admin123');
+      console.log('👤 Admin oluşturuldu: admin / Admin1987x');
     } else {
       console.log('ℹ️  Admin zaten var');
     }
@@ -60,11 +60,60 @@ const seedData = async () => {
       }
     }
 
-    // === 4. ÖRNEK TEDARİKÇİLER ===
+    // === 4. ÖRNEK TEDARİKÇİLER (GÜNCELLENDİ) ===
     const suppliers = [
-      { code: 'TD-001', company_name: 'Ahşap Dünyası Ltd.', tax_office: 'Kadıköy', tax_number: '1234567890', phone: '0216 555 11 11', email: 'info@ahsapdunyasi.com', contact_person: 'Ali Veli', payment_term: 30 },
-      { code: 'TD-002', company_name: 'Hırdavat Merkezi A.Ş.', tax_office: 'Şişli', tax_number: '9876543210', phone: '0212 444 22 22', email: 'satis@hirdavat.com', contact_person: 'Ayşe Kaya', payment_term: 45 },
-      { code: 'TD-003', company_name: 'Aksesuar Plus', tax_office: 'Beyoğlu', tax_number: '5556667770', phone: '0212 333 33 33', email: 'siparis@aksesuarplus.com', contact_person: 'Mehmet Demir', payment_term: 60 },
+      {
+        code: 'TD-001',
+        company_name: 'Ahşap Dünyası Ltd.',
+        phone: '0216 555 11 11',
+        email: 'info@ahsapdunyasi.com',
+        address: 'Sanayi Mah. Ahşap Sok. No:15 Kadıköy/İstanbul',
+        contact_person: 'Ali Veli',
+        bank_info: 'Ziraat Bankası - TR12 0001 0002 0003 0004 0005 01',
+        payment_term: 30,
+        old_price: 240,
+        new_price: 250,
+        unit: 'm²',
+      },
+      {
+        code: 'TD-002',
+        company_name: 'Hırdavat Merkezi A.Ş.',
+        phone: '0212 444 22 22',
+        email: 'satis@hirdavat.com',
+        address: 'Perpa Ticaret Merkezi B Blok No:412 Şişli/İstanbul',
+        contact_person: 'Ayşe Kaya',
+        bank_info: 'İş Bankası - TR34 0006 4000 0011 2233 4455 66',
+        payment_term: 45,
+        old_price: 4.5,
+        new_price: 5,
+        unit: 'adet',
+      },
+      {
+        code: 'TD-003',
+        company_name: 'Aksesuar Plus',
+        phone: '0212 333 33 33',
+        email: 'siparis@aksesuarplus.com',
+        address: 'Karaköy Mah. Bankalar Cad. No:8 Beyoğlu/İstanbul',
+        contact_person: 'Mehmet Demir',
+        bank_info: 'Garanti BBVA - TR56 0006 2000 1234 5678 9012 34',
+        payment_term: 60,
+        old_price: 14,
+        new_price: 15,
+        unit: 'adet',
+      },
+      {
+        code: 'TD-004',
+        company_name: 'Boya Kimya San. Tic.',
+        phone: '0216 777 88 88',
+        email: 'info@boyakimya.com',
+        address: 'İçerenköy Mah. Kimya Cad. No:22 Ataşehir/İstanbul',
+        contact_person: 'Fatma Öztürk',
+        bank_info: 'Yapı Kredi - TR78 0006 7010 0000 0012 3456 78',
+        payment_term: 30,
+        old_price: 75,
+        new_price: 80,
+        unit: 'kg',
+      },
     ];
 
     for (const s of suppliers) {
@@ -77,7 +126,7 @@ const seedData = async () => {
 
     console.log('\n✅ Seed işlemi tamamlandı!\n');
     console.log('📋 GİRİŞ BİLGİLERİ (Kullanıcı Adı / Şifre):');
-    console.log('   Admin:     admin / admin123');
+    console.log('   Admin:     admin / Admin1987x');
     console.log('   Sat.Alma:  ahmet / 123456');
     console.log('   Depo:      mehmet / 123456');
     console.log('   Üretim:    ayse / 123456');

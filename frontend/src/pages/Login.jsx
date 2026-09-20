@@ -87,7 +87,7 @@ export default function Login() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="Kullanıcı Adı"
                 className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 autoComplete="username"
@@ -122,7 +122,7 @@ export default function Login() {
 
           <div className="mt-5 pt-4 border-t border-gray-100">
             <p className="text-xs text-gray-500 text-center">
-              💡 Demo: <strong>admin / admin123</strong>
+              💡 KULLANICI HESABINIZ YOKSA YÖNETİCİNİZLE İLETİŞİME GEÇİNİZ!
             </p>
           </div>
         </form>

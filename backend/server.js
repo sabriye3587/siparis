@@ -20,6 +20,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/items', require('./routes/items'));
 app.use('/api/suppliers', require('./routes/suppliers'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/orders', require('./routes/orders'));
 
 // Test endpoint
 app.get('/api', (req, res) => {
