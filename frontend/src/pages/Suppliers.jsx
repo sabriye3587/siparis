@@ -124,7 +124,7 @@ export default function Suppliers() {
   );
   const [orderSuccess, setOrderSuccess] = useState(false);
 
-  // ⬇️ YENİ: Rol kontrolü
+  // Rol kontrolü
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -204,7 +204,6 @@ export default function Suppliers() {
       return;
     }
 
-    // Fiyatları STRING olarak gönder (değişmemesi için)
     const payload = {
       ...form,
       old_price: String(form.old_price || '0'),
@@ -315,7 +314,7 @@ export default function Suppliers() {
     }
   };
 
-  // 🖨️ Sipariş formunu yazdır
+  // Yazdır
   const handlePrintOrder = () => {
     if (!orderSupplier) return;
 
@@ -1079,22 +1078,22 @@ export default function Suppliers() {
         </>
       )}
 
-      {/* Tedarikçi Ekle/Düzenle Modal */}
+      {/* Tedarikçi Ekle/Düzenle Modal — DÜZELTİLDİ */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8">
-            <div className="flex justify-between items-center p-5 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-2 sm:my-4 max-h-[calc(100vh-1rem)] flex flex-col">
+            <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
                   <Building2 size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-800">
                     {editingId
                       ? 'Tedarikçi Düzenle'
                       : 'Yeni Tedarikçi Ekle'}
                   </h2>
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
                     {editingId
                       ? 'Tedarikçi bilgilerini güncelleyin'
                       : 'Yeni bir tedarikçi kartı oluşturun'}
@@ -1106,13 +1105,16 @@ export default function Suppliers() {
                   setShowModal(false);
                   resetForm();
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5">
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 sm:p-5 overflow-y-auto flex-1"
+            >
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
                   <AlertTriangle size={16} />
@@ -1397,222 +1399,228 @@ export default function Suppliers() {
         </div>
       )}
 
-      {/* Sipariş Formu Modal */}
+      {/* Sipariş Formu Modal — DÜZELTİLDİ */}
       {showOrderModal && orderSupplier && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
-            <div className="flex justify-between items-center p-5 border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-t-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-2 sm:my-4 max-h-[calc(100vh-1rem)] flex flex-col">
+            <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-t-2xl flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-lg">
                   <ShoppingCart size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">
+                  <h2 className="text-lg sm:text-xl font-bold">
                     Sipariş Formu Oluştur
                   </h2>
-                  <p className="text-sm text-green-100 mt-0.5">
+                  <p className="text-xs sm:text-sm text-green-100 mt-0.5">
                     Yeni sipariş kaydı oluşturun
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowOrderModal(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition"
+                className="p-2 hover:bg-white/20 rounded-lg transition flex-shrink-0"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {orderSuccess && (
-              <div className="m-5 bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg flex items-center gap-3">
-                <div className="bg-green-600 text-white p-1.5 rounded-full">
-                  ✓
+            <div className="overflow-y-auto flex-1">
+              {orderSuccess && (
+                <div className="m-5 bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg flex items-center gap-3">
+                  <div className="bg-green-600 text-white p-1.5 rounded-full">
+                    ✓
+                  </div>
+                  <div>
+                    <p className="font-medium">
+                      Sipariş başarıyla oluşturuldu!
+                    </p>
+                    <p className="text-sm text-green-600">
+                      Pencere otomatik kapanacak...
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">
-                    Sipariş başarıyla oluşturuldu!
-                  </p>
-                  <p className="text-sm text-green-600">
-                    Pencere otomatik kapanacak...
-                  </p>
-                </div>
-              </div>
-            )}
+              )}
 
-            {!orderSuccess && (
-              <form onSubmit={handleOrderSubmit} className="p-5">
-                {/* Tedarikçi Seçimi (aranabilir) */}
-                <div className="mb-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tedarikçi Ara ve Seç
-                  </label>
-                  <SearchableSelect
-                    options={suppliers
-                      .filter((s) => s.status === 'aktif')
-                      .map((s) => ({
-                        value: s._id,
-                        label: `${s.code} — ${s.company_name}`,
-                        sublabel: `${s.contact_person || 'Yetkili yok'} • ${s.phone || 'Telefon yok'}`,
-                      }))}
-                    value={orderSupplier?._id}
-                    onChange={(value) => {
-                      const found = suppliers.find((s) => s._id === value);
-                      if (found) setOrderSupplier(found);
-                    }}
-                    placeholder="Firma adı, kod veya yetkili ara..."
-                    emptyMessage="Tedarikçi bulunamadı"
-                  />
-                </div>
+              {!orderSuccess && (
+                <form onSubmit={handleOrderSubmit} className="p-4 sm:p-5">
+                  {/* Tedarikçi Seçimi */}
+                  <div className="mb-5">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tedarikçi Ara ve Seç
+                    </label>
+                    <SearchableSelect
+                      options={suppliers
+                        .filter((s) => s.status === 'aktif')
+                        .map((s) => ({
+                          value: s._id,
+                          label: `${s.code} — ${s.company_name}`,
+                          sublabel: `${s.contact_person || 'Yetkili yok'} • ${s.phone || 'Telefon yok'}`,
+                        }))}
+                      value={orderSupplier?._id}
+                      onChange={(value) => {
+                        const found = suppliers.find(
+                          (s) => s._id === value
+                        );
+                        if (found) setOrderSupplier(found);
+                      }}
+                      placeholder="Firma adı, kod veya yetkili ara..."
+                      emptyMessage="Tedarikçi bulunamadı"
+                    />
+                  </div>
 
-                <div className="bg-gray-50 rounded-xl p-4 mb-5 border border-gray-100">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">
-                        Firma
+                  <div className="bg-gray-50 rounded-xl p-4 mb-5 border border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          Firma
+                        </div>
+                        <div className="font-medium text-gray-800">
+                          {orderSupplier.company_name}
+                        </div>
                       </div>
-                      <div className="font-medium text-gray-800">
-                        {orderSupplier.company_name}
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          Yetkili
+                        </div>
+                        <div className="text-sm text-gray-700">
+                          {orderSupplier.contact_person || '-'}
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">
-                        Yetkili
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          Telefon
+                        </div>
+                        <div className="text-sm text-gray-700">
+                          {orderSupplier.phone || '-'}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-700">
-                        {orderSupplier.contact_person || '-'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">
-                        Telefon
-                      </div>
-                      <div className="text-sm text-gray-700">
-                        {orderSupplier.phone || '-'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">
-                        Vade
-                      </div>
-                      <div className="text-sm text-gray-700">
-                        {orderSupplier.payment_term} gün
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          Vade
+                        </div>
+                        <div className="text-sm text-gray-700">
+                          {orderSupplier.payment_term} gün
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Eski Fiyat
-                    </label>
-                    <div className="px-3 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 line-through">
-                      ₺{orderSupplier.old_price || '0'}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Eski Fiyat
+                      </label>
+                      <div className="px-3 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 line-through">
+                        ₺{orderSupplier.old_price || '0'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Yeni Fiyat
+                      </label>
+                      <div className="px-3 py-2.5 bg-green-50 border border-green-200 rounded-lg font-bold text-green-700">
+                        ₺{orderSupplier.new_price || '0'}
+                        <span className="text-xs text-green-600 font-normal ml-1">
+                          / {orderSupplier.unit}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Sipariş Tarihi
+                      </label>
+                      <input
+                        type="date"
+                        value={orderDate}
+                        onChange={(e) => setOrderDate(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
                     </div>
                   </div>
-                  <div>
+
+                  <div className="mb-5">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Yeni Fiyat
+                      Miktar <span className="text-red-500">*</span>
                     </label>
-                    <div className="px-3 py-2.5 bg-green-50 border border-green-200 rounded-lg font-bold text-green-700">
-                      ₺{orderSupplier.new_price || '0'}
-                      <span className="text-xs text-green-600 font-normal ml-1">
-                        / {orderSupplier.unit}
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={orderQuantity}
+                        onChange={(e) =>
+                          setOrderQuantity(e.target.value)
+                        }
+                        className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-lg font-medium"
+                        required
+                      />
+                      <span className="text-gray-600 font-medium px-3 py-2 bg-gray-100 rounded-lg">
+                        {orderSupplier.unit}
                       </span>
                     </div>
                   </div>
-                  <div>
+
+                  <div className="mb-5">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Sipariş Tarihi
+                      Notlar (Opsiyonel)
                     </label>
-                    <input
-                      type="date"
-                      value={orderDate}
-                      onChange={(e) => setOrderDate(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    <textarea
+                      value={orderNotes}
+                      onChange={(e) => setOrderNotes(e.target.value)}
+                      placeholder="Sipariş ile ilgili notlar..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
                     />
                   </div>
-                </div>
 
-                <div className="mb-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Miktar <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={orderQuantity}
-                      onChange={(e) => setOrderQuantity(e.target.value)}
-                      className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-lg font-medium"
-                      required
-                    />
-                    <span className="text-gray-600 font-medium px-3 py-2 bg-gray-100 rounded-lg">
-                      {orderSupplier.unit}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mb-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notlar (Opsiyonel)
-                  </label>
-                  <textarea
-                    value={orderNotes}
-                    onChange={(e) => setOrderNotes(e.target.value)}
-                    placeholder="Sipariş ile ilgili notlar..."
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-                  />
-                </div>
-
-                <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-5 text-white mb-5">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="text-green-100 text-sm mb-1">
-                        Toplam Tutar
+                  <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-5 text-white mb-5">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-green-100 text-sm mb-1">
+                          Toplam Tutar
+                        </div>
+                        <div className="text-xs text-green-100">
+                          {orderQuantity} {orderSupplier.unit} × ₺
+                          {orderSupplier.new_price || '0'}
+                        </div>
                       </div>
-                      <div className="text-xs text-green-100">
-                        {orderQuantity} {orderSupplier.unit} × ₺
-                        {orderSupplier.new_price || '0'}
+                      <div className="text-3xl font-bold">
+                        ₺
+                        {(
+                          Number(orderQuantity) *
+                          (Number(orderSupplier.new_price) || 0)
+                        ).toFixed(2)}
                       </div>
                     </div>
-                    <div className="text-3xl font-bold">
-                      ₺
-                      {(
-                        Number(orderQuantity) *
-                        (Number(orderSupplier.new_price) || 0)
-                      ).toFixed(2)}
-                    </div>
                   </div>
-                </div>
 
-                {/* Butonlar */}
-                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-5 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setShowOrderModal(false)}
-                    className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                  >
-                    İptal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handlePrintOrder}
-                    className="px-5 py-2.5 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-100 transition flex items-center justify-center gap-2 font-medium"
-                  >
-                    <Printer size={18} /> Yazdır
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 font-medium shadow-sm"
-                  >
-                    <ShoppingCart size={18} /> Siparişi Oluştur
-                  </button>
-                </div>
-              </form>
-            )}
+                  {/* Butonlar */}
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-5 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setShowOrderModal(false)}
+                      className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePrintOrder}
+                      className="px-5 py-2.5 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-100 transition flex items-center justify-center gap-2 font-medium"
+                    >
+                      <Printer size={18} /> Yazdır
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 font-medium shadow-sm"
+                    >
+                      <ShoppingCart size={18} /> Siparişi Oluştur
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}

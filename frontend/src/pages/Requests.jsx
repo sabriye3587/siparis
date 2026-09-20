@@ -518,7 +518,7 @@ export default function Requests() {
       {/* Yeni Talep Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-8">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-4 sm:my-8">
             <div className="flex justify-between items-center p-5 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
