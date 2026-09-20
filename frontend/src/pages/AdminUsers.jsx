@@ -17,16 +17,45 @@ import {
   ChevronDown,
   ShieldAlert,
   User as UserIcon,
+  Info,
 } from 'lucide-react';
 import api from '../services/api';
 
-// Rol tanımları
+// Rol tanımları — hangi rollerin neyi görebileceği
 const ROLES = {
-  yonetici: { label: 'Yönetici', color: 'bg-red-100 text-red-700', desc: 'Tam yetki' },
-  satinalma_muduru: { label: 'Satın Alma Müdürü', color: 'bg-purple-100 text-purple-700', desc: 'Alım yetkisi' },
-  depo_sorumlusu: { label: 'Depo Sorumlusu', color: 'bg-blue-100 text-blue-700', desc: 'Stok işlemleri' },
-  uretim_sorumlusu: { label: 'Üretim Sorumlusu', color: 'bg-amber-100 text-amber-700', desc: 'Üretim işlemleri' },
-  talep_kullanici: { label: 'Talep Kullanıcı', color: 'bg-gray-100 text-gray-700', desc: 'Sadece talep' },
+  yonetici: {
+    label: 'Yönetici',
+    color: 'bg-red-100 text-red-700',
+    desc: 'Tüm yetkiler + kullanıcı yönetimi',
+    canSee: ['Tüm sayfalar', 'Kullanıcı yönetimi'],
+  },
+  satinalma_muduru: {
+    label: 'Satın Alma Müdürü',
+    color: 'bg-purple-100 text-purple-700',
+    desc: 'Tedarikçi + talep + sipariş',
+    canSee: ['Tedarikçiler (fiyatlar)', 'Talepler', 'Siparişler', 'Stok'],
+  },
+  depo_sorumlusu: {
+    label: 'Depo Sorumlusu',
+    color: 'bg-blue-100 text-blue-700',
+    desc: 'Stok + malzeme (fiyat göremez)',
+    canSee: ['Malzeme Depo', 'Stok Hareketleri', 'Talepler'],
+    cannotSee: ['Tedarikçiler (fiyatlar)', 'Kullanıcı Yönetimi'],
+  },
+  uretim_sorumlusu: {
+    label: 'Üretim Sorumlusu',
+    color: 'bg-amber-100 text-amber-700',
+    desc: 'Üretim + malzeme (fiyat göremez)',
+    canSee: ['Malzeme Depo', 'Talepler'],
+    cannotSee: ['Tedarikçiler (fiyatlar)', 'Stok Hareketleri', 'Kullanıcı Yönetimi'],
+  },
+  talep_kullanici: {
+    label: 'Talep Kullanıcı',
+    color: 'bg-gray-100 text-gray-700',
+    desc: 'Sadece talep oluşturma',
+    canSee: ['Ana Sayfa', 'Talepler'],
+    cannotSee: ['Tedarikçiler', 'Stok', 'Kullanıcı Yönetimi'],
+  },
 };
 
 const EMPTY_FORM = {
@@ -234,6 +263,8 @@ export default function AdminUsers() {
     );
   }
 
+  const selectedRole = ROLES[form.role] || ROLES.talep_kullanici;
+
   return (
     <div>
       {/* Başlık */}
@@ -393,9 +424,32 @@ export default function AdminUsers() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`${role.color} px-2.5 py-1 rounded-full text-xs font-medium`}>
-                          {role.label}
-                        </span>
+                        <div className="relative group">
+                          <span className={`${role.color} px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 cursor-help`}>
+                            {role.label}
+                            <Info size={11} className="opacity-60" />
+                          </span>
+                          {/* Hover tooltip */}
+                          <div className="absolute z-20 hidden group-hover:block top-full left-0 mt-2 w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl">
+                            <div className="font-semibold mb-2 text-green-400">✓ Görebilir:</div>
+                            <ul className="space-y-0.5 mb-2">
+                              {role.canSee.map((item, i) => (
+                                <li key={i}>• {item}</li>
+                              ))}
+                            </ul>
+                            {role.cannotSee && (
+                              <>
+                                <div className="font-semibold mb-1 mt-2 text-red-400">✗ Göremez:</div>
+                                <ul className="space-y-0.5">
+                                  {role.cannotSee.map((item, i) => (
+                                    <li key={i}>• {item}</li>
+                                  ))}
+                                </ul>
+                              </>
+                            )}
+                            <div className="absolute -top-1 left-4 w-2 h-2 bg-slate-800 transform rotate-45"></div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span
@@ -544,6 +598,26 @@ export default function AdminUsers() {
                       </option>
                     ))}
                   </select>
+
+                  {/* Seçili rolün yetki bilgisi */}
+                  <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <Info size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <div className="font-semibold text-blue-800 mb-1">
+                          {selectedRole.label} yetkileri:
+                        </div>
+                        <div className="text-green-700 mb-1">
+                          ✓ <strong>Görebilir:</strong> {selectedRole.canSee.join(', ')}
+                        </div>
+                        {selectedRole.cannotSee && (
+                          <div className="text-red-700">
+                            ✗ <strong>Göremez:</strong> {selectedRole.cannotSee.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">

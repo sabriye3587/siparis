@@ -11,9 +11,10 @@ const supplierSchema = new mongoose.Schema(
     bank_info: { type: String, default: '' },
     payment_term: { type: Number, default: 0 },
 
-    // YENİ ALANLAR
-    old_price: { type: Number, default: 0 },
-    new_price: { type: Number, default: 0 },
+    // FİYATLAR ARTIK STRING — Ne yazarsan o kalır
+    old_price: { type: String, default: '0' },
+    new_price: { type: String, default: '0' },
+
     unit: { type: String, default: 'adet' },
 
     status: { type: String, enum: ['aktif', 'pasif'], default: 'aktif' },

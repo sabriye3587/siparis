@@ -10,10 +10,17 @@ import {
   Filter,
   ChevronDown,
   Save,
+  PlusCircle,
+  MinusCircle,
+  TrendingUp,
+  TrendingDown,
+  History,
+  ArrowDownToLine,
+  ArrowUpFromLine,
 } from 'lucide-react';
 import api from '../services/api';
 
-// Geçici örnek veriler (backend hazır olana kadar)
+// Geçici örnek veriler
 const MOCK_ITEMS = [
   { _id: '1', item_code: 'MDF-001', item_name: 'MDF 18mm Beyaz', unit: 'm²', category: 'MDF', brand: 'Kastamonu', min_stock: 50, max_stock: 500, critical_level: 100, last_purchase_price: 250, current_stock: 320 },
   { _id: '2', item_code: 'MNT-001', item_name: 'Menteşe 35mm', unit: 'adet', category: 'Diğer', brand: 'Blum', min_stock: 200, max_stock: 2000, critical_level: 500, last_purchase_price: 5, current_stock: 150 },
@@ -22,11 +29,9 @@ const MOCK_ITEMS = [
   { _id: '5', item_code: 'BOY-001', item_name: 'Boya Beyaz 20kg', unit: 'kg', category: 'Kimyasal', brand: 'Marshall', min_stock: 20, max_stock: 200, critical_level: 50, last_purchase_price: 80, current_stock: 35 },
 ];
 
-// Kategoriler (form için)
 const CATEGORIES = ['MDF', 'Kenarbant-kapak', 'Kenarbant-kapı', 'PVC-kapak', 'PVC-kapı', 'Tutkal-kapak', 'Tutkal-kapı', 'Diğer'];
 const UNITS = ['adet', 'kg', 'm²', 'm', 'lt', 'paket', 'kutu'];
 
-// Boş form
 const EMPTY_FORM = {
   item_code: '',
   item_name: '',
@@ -51,6 +56,16 @@ export default function Items() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState('');
   const [useMock, setUseMock] = useState(false);
+
+  // Stok hareket state
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [stockItem, setStockItem] = useState(null);
+  const [stockType, setStockType] = useState('giris'); // 'giris' | 'cikis'
+  const [stockQuantity, setStockQuantity] = useState(1);
+  const [stockDescription, setStockDescription] = useState('');
+  const [stockReference, setStockReference] = useState('');
+  const [stockSuccess, setStockSuccess] = useState(false);
+  const [stockError, setStockError] = useState('');
 
   // Verileri yükle
   const loadItems = async () => {
@@ -79,13 +94,11 @@ export default function Items() {
     setError('');
   };
 
-  // Modal aç (yeni)
   const openNewModal = () => {
     resetForm();
     setShowModal(true);
   };
 
-  // Modal aç (düzenle)
   const openEditModal = (item) => {
     setForm({
       item_code: item.item_code || '',
@@ -105,7 +118,7 @@ export default function Items() {
     setShowModal(true);
   };
 
-  // Kaydet
+  // Kaydet (Ürün ekle/güncelle)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -117,14 +130,12 @@ export default function Items() {
 
     try {
       if (useMock) {
-        // Mock data ile çalış
         if (editingId) {
           setItems(items.map((i) => (i._id === editingId ? { ...i, ...form } : i)));
         } else {
           setItems([...items, { _id: Date.now().toString(), ...form, current_stock: 0 }]);
         }
       } else {
-        // Gerçek API
         if (editingId) {
           await api.put(`/items/${editingId}`, form);
         } else {
@@ -155,6 +166,67 @@ export default function Items() {
     }
   };
 
+  // ⬇️ STOK HAREKET MODAL'I
+  const openStockModal = (item, type) => {
+    setStockItem(item);
+    setStockType(type);
+    setStockQuantity(1);
+    setStockDescription('');
+    setStockReference('');
+    setStockSuccess(false);
+    setStockError('');
+    setShowStockModal(true);
+  };
+
+  // Stok hareketi kaydet
+  const handleStockSubmit = async (e) => {
+    e.preventDefault();
+    setStockError('');
+
+    if (!stockQuantity || Number(stockQuantity) <= 0) {
+      setStockError('Geçerli bir miktar girin');
+      return;
+    }
+
+    const endpoint = stockType === 'giris' ? 'stock-in' : 'stock-out';
+    const payload = {
+      quantity: Number(stockQuantity),
+      description: stockDescription,
+      reference_no: stockReference,
+    };
+
+    try {
+      if (useMock) {
+        // Mock: sadece UI güncelle
+        const delta = stockType === 'giris' ? Number(stockQuantity) : -Number(stockQuantity);
+        setItems(
+          items.map((i) =>
+            i._id === stockItem._id
+              ? { ...i, current_stock: (i.current_stock || 0) + delta }
+              : i
+          )
+        );
+      } else {
+        const { data } = await api.post(`/items/${stockItem._id}/${endpoint}`, payload);
+
+        // Ürün listesini güncelle
+        setItems(
+          items.map((i) =>
+            i._id === stockItem._id ? { ...i, current_stock: data.current_stock } : i
+          )
+        );
+      }
+
+      setStockSuccess(true);
+      setTimeout(() => {
+        setShowStockModal(false);
+        setStockSuccess(false);
+      }, 1500);
+    } catch (err) {
+      setStockError(err.response?.data?.message || err.message || 'Bir hata oluştu');
+    }
+  };
+
   // Filtreleme
   const filtered = items.filter((item) => {
     const matchSearch =
@@ -168,8 +240,10 @@ export default function Items() {
   // Stok durumu hesapla
   const getStockStatus = (item) => {
     const stock = item.current_stock ?? 0;
-    if (stock <= item.critical_level) return { label: 'Kritik', color: 'bg-red-100 text-red-700', dot: 'bg-red-500' };
-    if (stock <= item.min_stock) return { label: 'Düşük', color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' };
+    if (stock <= item.critical_level)
+      return { label: 'Kritik', color: 'bg-red-100 text-red-700', dot: 'bg-red-500' };
+    if (stock <= item.min_stock)
+      return { label: 'Düşük', color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' };
     return { label: 'Yeterli', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' };
   };
 
@@ -178,7 +252,7 @@ export default function Items() {
       {/* Üst Başlık */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Ürün Kartları</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Malzeme Depo</h1>
           <p className="text-gray-500 text-sm mt-1">
             {filtered.length} ürün listeleniyor
             {useMock && <span className="ml-2 text-orange-600">(Demo veri)</span>}
@@ -242,12 +316,12 @@ export default function Items() {
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Kod</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Ürün Adı</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Kategori</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Marka</th>
                   <th className="px-4 py-3 text-center font-semibold text-gray-600">Birim</th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-600">Mevcut Stok</th>
                   <th className="px-4 py-3 text-right font-semibold text-gray-600">Min / Kritik</th>
-                  <th className="px-4 py-3 text-right font-semibold text-gray-600">Son Fiyat</th>
                   <th className="px-4 py-3 text-center font-semibold text-gray-600">Durum</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-600">İşlem</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-600">Hızlı İşlem</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-600">Diğer</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,25 +330,53 @@ export default function Items() {
                   return (
                     <tr key={item._id} className="border-b border-gray-100 hover:bg-blue-50/50 transition">
                       <td className="px-4 py-3 font-mono text-xs text-gray-700">{item.item_code}</td>
-                      <td className="px-4 py-3 font-medium text-gray-800">{item.item_name}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-gray-800">{item.item_name}</div>
+                        {item.brand && (
+                          <div className="text-xs text-gray-500">{item.brand}</div>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
                           {item.category || '-'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{item.brand || '-'}</td>
-                      <td className="px-4 py-3 text-center text-gray-600">{item.unit}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">
-                        {item.min_stock} / <span className="font-medium text-red-600">{item.critical_level}</span>
+                      <td className="px-4 py-3 text-center text-gray-600 text-xs">{item.unit}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-lg font-bold text-gray-800">
+                          {item.current_stock ?? 0}
+                        </span>
+                        <span className="text-xs text-gray-400 ml-1">{item.unit}</span>
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-700 font-medium">
-                        {item.last_purchase_price ? `₺${Number(item.last_purchase_price).toFixed(2)}` : '-'}
+                      <td className="px-4 py-3 text-right text-gray-600 text-xs">
+                        {item.min_stock} / <span className="font-medium text-red-600">{item.critical_level}</span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`${status.color} px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`}></span>
                           {status.label}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-center gap-2">
+                          {/* + GİRİŞ BUTONU */}
+                          <button
+                            onClick={() => openStockModal(item, 'giris')}
+                            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition text-xs font-medium shadow-sm"
+                            title="Stok Giriş (Ürün geldi)"
+                          >
+                            <PlusCircle size={14} /> Giriş
+                          </button>
+
+                          {/* - ÇIKIŞ BUTONU */}
+                          <button
+                            onClick={() => openStockModal(item, 'cikis')}
+                            className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition text-xs font-medium shadow-sm"
+                            title="Stok Çıkış (Ürün kullanıldı)"
+                          >
+                            <MinusCircle size={14} /> Çıkış
+                          </button>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-center gap-1">
@@ -303,11 +405,10 @@ export default function Items() {
         )}
       </div>
 
-      {/* Modal (Ekle/Düzenle) */}
+      {/* Ürün Ekle/Düzenle Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
-            {/* Modal Başlık */}
             <div className="flex justify-between items-center p-5 border-b border-gray-200">
               <div>
                 <h2 className="text-xl font-bold text-gray-800">
@@ -325,7 +426,6 @@ export default function Items() {
               </button>
             </div>
 
-            {/* Modal İçerik */}
             <form onSubmit={handleSubmit} className="p-5">
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
@@ -335,7 +435,6 @@ export default function Items() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Sol Kolon */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Ürün Kodu <span className="text-red-500">*</span>
@@ -431,7 +530,6 @@ export default function Items() {
                 </div>
               </div>
 
-              {/* Stok Ayarları */}
               <div className="mt-5 pt-5 border-t border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Stok Seviyeleri</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -465,7 +563,6 @@ export default function Items() {
                 </div>
               </div>
 
-              {/* Butonlar */}
               <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-gray-200">
                 <button
                   type="button"
@@ -483,6 +580,208 @@ export default function Items() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ⬇️ STOK HAREKET MODAL */}
+      {showStockModal && stockItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md my-8">
+            {/* Başlık */}
+            <div
+              className={`flex justify-between items-center p-5 border-b rounded-t-2xl text-white ${
+                stockType === 'giris'
+                  ? 'bg-gradient-to-r from-green-600 to-green-700'
+                  : 'bg-gradient-to-r from-red-600 to-red-700'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  {stockType === 'giris' ? <ArrowDownToLine size={20} /> : <ArrowUpFromLine size={20} />}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">
+                    {stockType === 'giris' ? 'Stok Girişi' : 'Stok Çıkışı'}
+                  </h2>
+                  <p className="text-xs text-white/80 mt-0.5">
+                    {stockType === 'giris' ? 'Depoya ürün ekle' : 'Depodan ürün çıkar'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowStockModal(false)}
+                className="p-2 hover:bg-white/20 rounded-lg transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {stockSuccess && (
+              <div className="m-5 bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg flex items-center gap-2 text-sm">
+                <div className="bg-green-600 text-white p-1 rounded-full">✓</div>
+                <span>İşlem başarılı!</span>
+              </div>
+            )}
+
+            {!stockSuccess && (
+              <form onSubmit={handleStockSubmit} className="p-5">
+                {stockError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
+                    <AlertTriangle size={16} />
+                    {stockError}
+                  </div>
+                )}
+
+                {/* Ürün Bilgi Kartı */}
+                <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Ürün</div>
+                  <div className="font-medium text-gray-800">{stockItem.item_name}</div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-mono text-xs text-gray-500">{stockItem.item_code}</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">
+                      Mevcut: {stockItem.current_stock ?? 0} {stockItem.unit}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Miktar */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Miktar <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setStockQuantity(Math.max(1, Number(stockQuantity) - 1))}
+                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center font-bold text-gray-700 transition"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={stockQuantity}
+                      onChange={(e) => setStockQuantity(e.target.value)}
+                      className="flex-1 text-center px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-bold"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setStockQuantity(Number(stockQuantity) + 1)}
+                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center font-bold text-gray-700 transition"
+                    >
+                      +
+                    </button>
+                    <span className="text-gray-600 font-medium text-sm w-12 text-center">
+                      {stockItem.unit}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Hızlı miktar butonları */}
+                <div className="flex gap-2 mb-4">
+                  {[5, 10, 20, 50, 100].map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => setStockQuantity(q)}
+                      className="flex-1 text-xs py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium transition"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Açıklama */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Açıklama (Opsiyonel)
+                  </label>
+                  <input
+                    type="text"
+                    value={stockDescription}
+                    onChange={(e) => setStockDescription(e.target.value)}
+                    placeholder={
+                      stockType === 'giris'
+                        ? 'Örn: Fatura no 12345 - Tedarikçi X'
+                        : 'Örn: Üretim emri #89 için'
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Referans No */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Referans No (Opsiyonel)
+                  </label>
+                  <input
+                    type="text"
+                    value={stockReference}
+                    onChange={(e) => setStockReference(e.target.value)}
+                    placeholder="Örn: IRS-2026-0142"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Önizleme */}
+                {stockQuantity > 0 && (
+                  <div
+                    className={`rounded-lg p-3 mb-4 border ${
+                      stockType === 'giris'
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-red-50 border-red-200'
+                    }`}
+                  >
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Yeni stok:</span>
+                      <span
+                        className={`font-bold ${
+                          stockType === 'giris' ? 'text-green-700' : 'text-red-700'
+                        }`}
+                      >
+                        {stockItem.current_stock ?? 0}{' '}
+                        {stockType === 'giris' ? '+' : '−'} {stockQuantity} ={' '}
+                        {stockType === 'giris'
+                          ? (stockItem.current_stock ?? 0) + Number(stockQuantity)
+                          : Math.max(0, (stockItem.current_stock ?? 0) - Number(stockQuantity))}{' '}
+                        {stockItem.unit}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Butonlar */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowStockModal(false)}
+                    className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    className={`flex-1 text-white px-4 py-2.5 rounded-lg transition flex items-center justify-center gap-2 font-medium shadow-sm ${
+                      stockType === 'giris'
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
+                  >
+                    {stockType === 'giris' ? (
+                      <>
+                        <PlusCircle size={18} /> Girişi Kaydet
+                      </>
+                    ) : (
+                      <>
+                        <MinusCircle size={18} /> Çıkışı Kaydet
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

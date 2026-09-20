@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import SearchableSelect from '../components/SearchableSelect';
+import { ShieldAlert } from 'lucide-react';
 import {
   Plus,
   Search,
@@ -35,8 +36,8 @@ const MOCK_SUPPLIERS = [
     contact_person: 'Ali Veli',
     bank_info: 'Ziraat Bankası - TR12 0001 0002 0003 0004 0005 01',
     payment_term: 30,
-    old_price: 240,
-    new_price: 250,
+    old_price: '240',
+    new_price: '250',
     unit: 'm²',
     status: 'aktif',
   },
@@ -50,8 +51,8 @@ const MOCK_SUPPLIERS = [
     contact_person: 'Ayşe Kaya',
     bank_info: 'İş Bankası - TR34 0006 4000 0011 2233 4455 66',
     payment_term: 45,
-    old_price: 4.5,
-    new_price: 5,
+    old_price: '4.5',
+    new_price: '5',
     unit: 'adet',
     status: 'aktif',
   },
@@ -65,8 +66,8 @@ const MOCK_SUPPLIERS = [
     contact_person: 'Mehmet Demir',
     bank_info: 'Garanti BBVA - TR56 0006 2000 1234 5678 9012 34',
     payment_term: 60,
-    old_price: 14,
-    new_price: 15,
+    old_price: '14',
+    new_price: '15',
     unit: 'adet',
     status: 'aktif',
   },
@@ -80,8 +81,8 @@ const MOCK_SUPPLIERS = [
     contact_person: 'Fatma Öztürk',
     bank_info: 'Yapı Kredi - TR78 0006 7010 0000 0012 3456 78',
     payment_term: 30,
-    old_price: 75,
-    new_price: 80,
+    old_price: '75',
+    new_price: '80',
     unit: 'kg',
     status: 'pasif',
   },
@@ -96,8 +97,8 @@ const EMPTY_FORM = {
   contact_person: '',
   bank_info: '',
   payment_term: 30,
-  old_price: 0,
-  new_price: 0,
+  old_price: '0',
+  new_price: '0',
   unit: 'adet',
   status: 'aktif',
 };
@@ -123,6 +124,22 @@ export default function Suppliers() {
   );
   const [orderSuccess, setOrderSuccess] = useState(false);
 
+  // ⬇️ YENİ: Rol kontrolü
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const u = localStorage.getItem('user');
+    if (u) {
+      try {
+        setCurrentUser(JSON.parse(u));
+      } catch {}
+    }
+  }, []);
+
+  const hasAccess =
+    currentUser &&
+    ['yonetici', 'satinalma_muduru'].includes(currentUser.role);
+
   // Verileri yükle
   const loadSuppliers = async () => {
     try {
@@ -140,8 +157,10 @@ export default function Suppliers() {
   };
 
   useEffect(() => {
-    loadSuppliers();
-  }, []);
+    if (hasAccess) {
+      loadSuppliers();
+    }
+  }, [hasAccess]);
 
   // Formu sıfırla
   const resetForm = () => {
@@ -165,8 +184,8 @@ export default function Suppliers() {
       contact_person: supplier.contact_person || '',
       bank_info: supplier.bank_info || '',
       payment_term: supplier.payment_term || 30,
-      old_price: supplier.old_price || 0,
-      new_price: supplier.new_price || 0,
+      old_price: String(supplier.old_price ?? '0'),
+      new_price: String(supplier.new_price ?? '0'),
       unit: supplier.unit || 'adet',
       status: supplier.status || 'aktif',
     });
@@ -185,11 +204,11 @@ export default function Suppliers() {
       return;
     }
 
-    // Fiyatları Number olarak gönder
+    // Fiyatları STRING olarak gönder (değişmemesi için)
     const payload = {
       ...form,
-      old_price: Number(form.old_price) || 0,
-      new_price: Number(form.new_price) || 0,
+      old_price: String(form.old_price || '0'),
+      new_price: String(form.new_price || '0'),
       payment_term: Number(form.payment_term) || 0,
     };
 
@@ -337,19 +356,14 @@ export default function Suppliers() {
               color: #6b7280;
               margin-top: 4px;
             }
-            .title {
-              text-align: right;
-            }
+            .title { text-align: right; }
             .title h1 {
               font-size: 26px;
               color: #1f2937;
               margin-bottom: 4px;
               letter-spacing: 1px;
             }
-            .title p {
-              font-size: 12px;
-              color: #6b7280;
-            }
+            .title p { font-size: 12px; color: #6b7280; }
             .section { margin-bottom: 25px; }
             .section-title {
               font-size: 12px;
@@ -401,10 +415,7 @@ export default function Suppliers() {
             }
             .text-right { text-align: right; }
             .text-center { text-align: center; }
-            .total-row {
-              background: #16a34a;
-              color: white;
-            }
+            .total-row { background: #16a34a; color: white; }
             .total-row td {
               padding: 16px 12px;
               font-size: 18px;
@@ -598,10 +609,33 @@ export default function Suppliers() {
 
   // Fiyat farkı hesapla
   const getPriceDiff = (oldP, newP) => {
-    if (!oldP || !newP) return null;
-    const diff = ((newP - oldP) / oldP) * 100;
+    const oldN = Number(oldP);
+    const newN = Number(newP);
+    if (!oldN || !newN) return null;
+    const diff = ((newN - oldN) / oldN) * 100;
     return diff;
   };
+
+  // ==== YETKİSİZ ERİŞİM KONTROLÜ ====
+  if (currentUser && !hasAccess) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md text-center">
+          <div className="bg-red-100 text-red-600 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <ShieldAlert size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            Yetkisiz Erişim
+          </h2>
+          <p className="text-gray-600 text-sm">
+            Tedarikçi bilgileri <strong>fiyat ve ticari veriler</strong> içerdiği
+            için sadece <strong>yönetici</strong> ve{' '}
+            <strong>satın alma müdürü</strong> tarafından görüntülenebilir.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -820,7 +854,7 @@ export default function Suppliers() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="text-gray-500 text-sm">
-                            ₺{Number(s.old_price || 0).toFixed(2)}
+                            ₺{s.old_price || '0'}
                           </span>
                           <span className="text-xs text-gray-400">
                             {' '}
@@ -831,7 +865,7 @@ export default function Suppliers() {
                           <div className="flex items-center justify-end gap-2">
                             <div>
                               <div className="font-bold text-gray-800">
-                                ₺{Number(s.new_price || 0).toFixed(2)}
+                                ₺{s.new_price || '0'}
                               </div>
                               <div className="text-xs text-gray-400">
                                 / {s.unit}
@@ -949,7 +983,7 @@ export default function Suppliers() {
                           Eski Fiyat
                         </div>
                         <div className="text-sm text-gray-500 line-through">
-                          ₺{Number(s.old_price || 0).toFixed(2)}
+                          ₺{s.old_price || '0'}
                         </div>
                       </div>
                       <div className="text-right">
@@ -957,7 +991,7 @@ export default function Suppliers() {
                           Yeni Fiyat
                         </div>
                         <div className="text-lg font-bold text-gray-800">
-                          ₺{Number(s.new_price || 0).toFixed(2)}
+                          ₺{s.new_price || '0'}
                           <span className="text-xs text-gray-400 font-normal">
                             {' '}
                             / {s.unit}
@@ -1208,14 +1242,11 @@ export default function Suppliers() {
                       Eski Fiyat (₺)
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={form.old_price}
                       onChange={(e) =>
-                        setForm({
-                          ...form,
-                          old_price: e.target.value,
-                        })
+                        setForm({ ...form, old_price: e.target.value })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -1225,8 +1256,8 @@ export default function Suppliers() {
                       Yeni Fiyat (₺)
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
                       value={form.new_price}
                       onChange={(e) =>
                         setForm({
@@ -1476,7 +1507,7 @@ export default function Suppliers() {
                       Eski Fiyat
                     </label>
                     <div className="px-3 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 line-through">
-                      ₺{Number(orderSupplier.old_price || 0).toFixed(2)}
+                      ₺{orderSupplier.old_price || '0'}
                     </div>
                   </div>
                   <div>
@@ -1484,7 +1515,7 @@ export default function Suppliers() {
                       Yeni Fiyat
                     </label>
                     <div className="px-3 py-2.5 bg-green-50 border border-green-200 rounded-lg font-bold text-green-700">
-                      ₺{Number(orderSupplier.new_price || 0).toFixed(2)}
+                      ₺{orderSupplier.new_price || '0'}
                       <span className="text-xs text-green-600 font-normal ml-1">
                         / {orderSupplier.unit}
                       </span>
@@ -1544,14 +1575,14 @@ export default function Suppliers() {
                       </div>
                       <div className="text-xs text-green-100">
                         {orderQuantity} {orderSupplier.unit} × ₺
-                        {Number(orderSupplier.new_price || 0).toFixed(2)}
+                        {orderSupplier.new_price || '0'}
                       </div>
                     </div>
                     <div className="text-3xl font-bold">
                       ₺
                       {(
                         Number(orderQuantity) *
-                        Number(orderSupplier.new_price || 0)
+                        (Number(orderSupplier.new_price) || 0)
                       ).toFixed(2)}
                     </div>
                   </div>
