@@ -12,9 +12,6 @@ import {
   Save,
   PlusCircle,
   MinusCircle,
-  TrendingUp,
-  TrendingDown,
-  History,
   ArrowDownToLine,
   ArrowUpFromLine,
 } from 'lucide-react';
@@ -60,14 +57,13 @@ export default function Items() {
   // Stok hareket state
   const [showStockModal, setShowStockModal] = useState(false);
   const [stockItem, setStockItem] = useState(null);
-  const [stockType, setStockType] = useState('giris'); // 'giris' | 'cikis'
+  const [stockType, setStockType] = useState('giris');
   const [stockQuantity, setStockQuantity] = useState(1);
   const [stockDescription, setStockDescription] = useState('');
   const [stockReference, setStockReference] = useState('');
   const [stockSuccess, setStockSuccess] = useState(false);
   const [stockError, setStockError] = useState('');
 
-  // Verileri yükle
   const loadItems = async () => {
     try {
       setLoading(true);
@@ -87,7 +83,6 @@ export default function Items() {
     loadItems();
   }, []);
 
-  // Formu sıfırla
   const resetForm = () => {
     setForm(EMPTY_FORM);
     setEditingId(null);
@@ -118,7 +113,6 @@ export default function Items() {
     setShowModal(true);
   };
 
-  // Kaydet (Ürün ekle/güncelle)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -150,7 +144,6 @@ export default function Items() {
     }
   };
 
-  // Sil
   const handleDelete = async (id, name) => {
     if (!confirm(`"${name}" ürününü silmek istediğinize emin misiniz?`)) return;
 
@@ -166,7 +159,6 @@ export default function Items() {
     }
   };
 
-  // ⬇️ STOK HAREKET MODAL'I
   const openStockModal = (item, type) => {
     setStockItem(item);
     setStockType(type);
@@ -178,7 +170,6 @@ export default function Items() {
     setShowStockModal(true);
   };
 
-  // Stok hareketi kaydet
   const handleStockSubmit = async (e) => {
     e.preventDefault();
     setStockError('');
@@ -197,7 +188,6 @@ export default function Items() {
 
     try {
       if (useMock) {
-        // Mock: sadece UI güncelle
         const delta = stockType === 'giris' ? Number(stockQuantity) : -Number(stockQuantity);
         setItems(
           items.map((i) =>
@@ -208,8 +198,6 @@ export default function Items() {
         );
       } else {
         const { data } = await api.post(`/items/${stockItem._id}/${endpoint}`, payload);
-
-        // Ürün listesini güncelle
         setItems(
           items.map((i) =>
             i._id === stockItem._id ? { ...i, current_stock: data.current_stock } : i
@@ -227,7 +215,6 @@ export default function Items() {
     }
   };
 
-  // Filtreleme
   const filtered = items.filter((item) => {
     const matchSearch =
       item.item_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -237,7 +224,6 @@ export default function Items() {
     return matchSearch && matchCategory;
   });
 
-  // Stok durumu hesapla
   const getStockStatus = (item) => {
     const stock = item.current_stock ?? 0;
     if (stock <= item.critical_level)
@@ -359,20 +345,17 @@ export default function Items() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-center gap-2">
-                          {/* + GİRİŞ BUTONU */}
                           <button
                             onClick={() => openStockModal(item, 'giris')}
                             className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition text-xs font-medium shadow-sm"
-                            title="Stok Giriş (Ürün geldi)"
+                            title="Stok Giriş"
                           >
                             <PlusCircle size={14} /> Giriş
                           </button>
-
-                          {/* - ÇIKIŞ BUTONU */}
                           <button
                             onClick={() => openStockModal(item, 'cikis')}
                             className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition text-xs font-medium shadow-sm"
-                            title="Stok Çıkış (Ürün kullanıldı)"
+                            title="Stok Çıkış"
                           >
                             <MinusCircle size={14} /> Çıkış
                           </button>
@@ -405,364 +388,378 @@ export default function Items() {
         )}
       </div>
 
-      {/* Ürün Ekle/Düzenle Modal */}
+      {/* ============ ÜRÜN EKLE/DÜZENLE MODAL (RESPONSIVE) ============ */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-4 sm:my-8">
-            <div className="flex justify-between items-center p-5 border-b border-gray-200">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  {editingId ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}
-                </h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  {editingId ? 'Ürün bilgilerini güncelleyin' : 'Yeni bir ürün kartı oluşturun'}
-                </p>
-              </div>
-              <button
-                onClick={() => { setShowModal(false); resetForm(); }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-5">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
-                  <AlertTriangle size={16} />
-                  {error}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-start sm:items-center justify-center p-2 sm:p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-2 sm:my-8 flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+              {/* Başlık - Sabit */}
+              <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-200 flex-shrink-0">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ürün Kodu <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.item_code}
-                    onChange={(e) => setForm({ ...form, item_code: e.target.value })}
-                    placeholder="Örn: MDF-001"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+                    {editingId ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                    {editingId ? 'Ürün bilgilerini güncelleyin' : 'Yeni bir ürün kartı oluşturun'}
+                  </p>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ürün Adı <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.item_name}
-                    onChange={(e) => setForm({ ...form, item_name: e.target.value })}
-                    placeholder="Örn: MDF 18mm Beyaz"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Alt Kategori</label>
-                  <input
-                    type="text"
-                    value={form.sub_category}
-                    onChange={(e) => setForm({ ...form, sub_category: e.target.value })}
-                    placeholder="Örn: Beyaz Seri"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Birim</label>
-                  <select
-                    value={form.unit}
-                    onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                    {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Marka</label>
-                  <input
-                    type="text"
-                    value={form.brand}
-                    onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                    placeholder="Örn: Kastamonu"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Barkod</label>
-                  <input
-                    type="text"
-                    value={form.barcode}
-                    onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-                    placeholder="Opsiyonel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Son Alış Fiyatı (₺)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={form.last_purchase_price}
-                    onChange={(e) => setForm({ ...form, last_purchase_price: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <button
+                  onClick={() => { setShowModal(false); resetForm(); }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              <div className="mt-5 pt-5 border-t border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Stok Seviyeleri</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Form - Kaydırılabilir */}
+              <form onSubmit={handleSubmit} className="p-4 sm:p-5 overflow-y-auto flex-1">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
+                    <AlertTriangle size={16} />
+                    {error}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Stok</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ürün Kodu <span className="text-red-500">*</span>
+                    </label>
                     <input
-                      type="number"
-                      value={form.min_stock}
-                      onChange={(e) => setForm({ ...form, min_stock: Number(e.target.value) })}
+                      type="text"
+                      value={form.item_code}
+                      onChange={(e) => setForm({ ...form, item_code: e.target.value })}
+                      placeholder="Örn: MDF-001"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ürün Adı <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.item_name}
+                      onChange={(e) => setForm({ ...form, item_name: e.target.value })}
+                      placeholder="Örn: MDF 18mm Beyaz"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => setForm({ ...form, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Alt Kategori</label>
+                    <input
+                      type="text"
+                      value={form.sub_category}
+                      onChange={(e) => setForm({ ...form, sub_category: e.target.value })}
+                      placeholder="Örn: Beyaz Seri"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Maksimum Stok</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Birim</label>
+                    <select
+                      value={form.unit}
+                      onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Marka</label>
                     <input
-                      type="number"
-                      value={form.max_stock}
-                      onChange={(e) => setForm({ ...form, max_stock: Number(e.target.value) })}
+                      type="text"
+                      value={form.brand}
+                      onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                      placeholder="Örn: Kastamonu"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Kritik Seviye</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Barkod</label>
+                    <input
+                      type="text"
+                      value={form.barcode}
+                      onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+                      placeholder="Opsiyonel"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Son Alış Fiyatı (₺)</label>
                     <input
                       type="number"
-                      value={form.critical_level}
-                      onChange={(e) => setForm({ ...form, critical_level: Number(e.target.value) })}
+                      step="0.01"
+                      value={form.last_purchase_price}
+                      onChange={(e) => setForm({ ...form, last_purchase_price: Number(e.target.value) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-gray-200">
+                <div className="mt-5 pt-5 border-t border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Stok Seviyeleri</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Stok</label>
+                      <input
+                        type="number"
+                        value={form.min_stock}
+                        onChange={(e) => setForm({ ...form, min_stock: Number(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Maksimum Stok</label>
+                      <input
+                        type="number"
+                        value={form.max_stock}
+                        onChange={(e) => setForm({ ...form, max_stock: Number(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Kritik Seviye</label>
+                      <input
+                        type="number"
+                        value={form.critical_level}
+                        onChange={(e) => setForm({ ...form, critical_level: Number(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </form>
+
+              {/* Alt Butonlar - Sabit */}
+              <div className="flex flex-col sm:flex-row justify-end gap-3 p-4 sm:p-5 border-t border-gray-200 flex-shrink-0 bg-gray-50 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition order-2 sm:order-1"
                 >
                   İptal
                 </button>
                 <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                  type="button"
+                  onClick={handleSubmit}
+                  className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 order-1 sm:order-2"
                 >
                   <Save size={18} />
                   {editingId ? 'Güncelle' : 'Kaydet'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ⬇️ STOK HAREKET MODAL */}
+      {/* ============ STOK HAREKET MODAL (RESPONSIVE) ============ */}
       {showStockModal && stockItem && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md my-8">
-            {/* Başlık */}
-            <div
-              className={`flex justify-between items-center p-5 border-b rounded-t-2xl text-white ${
-                stockType === 'giris'
-                  ? 'bg-gradient-to-r from-green-600 to-green-700'
-                  : 'bg-gradient-to-r from-red-600 to-red-700'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-lg">
-                  {stockType === 'giris' ? <ArrowDownToLine size={20} /> : <ArrowUpFromLine size={20} />}
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold">
-                    {stockType === 'giris' ? 'Stok Girişi' : 'Stok Çıkışı'}
-                  </h2>
-                  <p className="text-xs text-white/80 mt-0.5">
-                    {stockType === 'giris' ? 'Depoya ürün ekle' : 'Depodan ürün çıkar'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowStockModal(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition"
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-start sm:items-center justify-center p-2 sm:p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md my-2 sm:my-8 flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+              {/* Başlık */}
+              <div
+                className={`flex justify-between items-center p-4 sm:p-5 rounded-t-2xl text-white flex-shrink-0 ${
+                  stockType === 'giris'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700'
+                    : 'bg-gradient-to-r from-red-600 to-red-700'
+                }`}
               >
-                <X size={18} />
-              </button>
-            </div>
-
-            {stockSuccess && (
-              <div className="m-5 bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg flex items-center gap-2 text-sm">
-                <div className="bg-green-600 text-white p-1 rounded-full">✓</div>
-                <span>İşlem başarılı!</span>
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-lg">
+                    {stockType === 'giris' ? <ArrowDownToLine size={20} /> : <ArrowUpFromLine size={20} />}
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold">
+                      {stockType === 'giris' ? 'Stok Girişi' : 'Stok Çıkışı'}
+                    </h2>
+                    <p className="text-xs text-white/80 mt-0.5">
+                      {stockType === 'giris' ? 'Depoya ürün ekle' : 'Depodan ürün çıkar'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowStockModal(false)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition flex-shrink-0"
+                >
+                  <X size={18} />
+                </button>
               </div>
-            )}
 
-            {!stockSuccess && (
-              <form onSubmit={handleStockSubmit} className="p-5">
-                {stockError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
-                    <AlertTriangle size={16} />
-                    {stockError}
+              {/* İçerik */}
+              <div className="overflow-y-auto flex-1 p-4 sm:p-5">
+                {stockSuccess && (
+                  <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg flex items-center gap-2 text-sm">
+                    <div className="bg-green-600 text-white p-1 rounded-full">✓</div>
+                    <span>İşlem başarılı!</span>
                   </div>
                 )}
 
-                {/* Ürün Bilgi Kartı */}
-                <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
-                  <div className="text-xs text-gray-500 mb-1">Ürün</div>
-                  <div className="font-medium text-gray-800">{stockItem.item_name}</div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="font-mono text-xs text-gray-500">{stockItem.item_code}</span>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">
-                      Mevcut: {stockItem.current_stock ?? 0} {stockItem.unit}
-                    </span>
-                  </div>
-                </div>
+                {!stockSuccess && (
+                  <form onSubmit={handleStockSubmit} id="stock-form">
+                    {stockError && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">
+                        <AlertTriangle size={16} />
+                        {stockError}
+                      </div>
+                    )}
 
-                {/* Miktar */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Miktar <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setStockQuantity(Math.max(1, Number(stockQuantity) - 1))}
-                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center font-bold text-gray-700 transition"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={stockQuantity}
-                      onChange={(e) => setStockQuantity(e.target.value)}
-                      className="flex-1 text-center px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-bold"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setStockQuantity(Number(stockQuantity) + 1)}
-                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center font-bold text-gray-700 transition"
-                    >
-                      +
-                    </button>
-                    <span className="text-gray-600 font-medium text-sm w-12 text-center">
-                      {stockItem.unit}
-                    </span>
-                  </div>
-                </div>
+                    {/* Ürün Bilgi */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Ürün</div>
+                      <div className="font-medium text-gray-800">{stockItem.item_name}</div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="font-mono text-xs text-gray-500">{stockItem.item_code}</span>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">
+                          Mevcut: {stockItem.current_stock ?? 0} {stockItem.unit}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Hızlı miktar butonları */}
-                <div className="flex gap-2 mb-4">
-                  {[5, 10, 20, 50, 100].map((q) => (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => setStockQuantity(q)}
-                      className="flex-1 text-xs py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium transition"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
+                    {/* Miktar */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Miktar <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setStockQuantity(Math.max(1, Number(stockQuantity) - 1))}
+                          className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center font-bold text-gray-700 transition flex-shrink-0"
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          value={stockQuantity}
+                          onChange={(e) => setStockQuantity(e.target.value)}
+                          className="flex-1 text-center px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-bold min-w-0"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setStockQuantity(Number(stockQuantity) + 1)}
+                          className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center font-bold text-gray-700 transition flex-shrink-0"
+                        >
+                          +
+                        </button>
+                        <span className="text-gray-600 font-medium text-sm flex-shrink-0">
+                          {stockItem.unit}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Açıklama */}
-                <div className="mb-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Açıklama (Opsiyonel)
-                  </label>
-                  <input
-                    type="text"
-                    value={stockDescription}
-                    onChange={(e) => setStockDescription(e.target.value)}
-                    placeholder={
-                      stockType === 'giris'
-                        ? 'Örn: Fatura no 12345 - Tedarikçi X'
-                        : 'Örn: Üretim emri #89 için'
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
+                    {/* Hızlı miktar */}
+                    <div className="flex gap-2 mb-4">
+                      {[5, 10, 20, 50, 100].map((q) => (
+                        <button
+                          key={q}
+                          type="button"
+                          onClick={() => setStockQuantity(q)}
+                          className="flex-1 text-xs py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium transition"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
 
-                {/* Referans No */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Referans No (Opsiyonel)
-                  </label>
-                  <input
-                    type="text"
-                    value={stockReference}
-                    onChange={(e) => setStockReference(e.target.value)}
-                    placeholder="Örn: IRS-2026-0142"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
+                    {/* Açıklama */}
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Açıklama (Opsiyonel)
+                      </label>
+                      <input
+                        type="text"
+                        value={stockDescription}
+                        onChange={(e) => setStockDescription(e.target.value)}
+                        placeholder={
+                          stockType === 'giris'
+                            ? 'Örn: Fatura no 12345'
+                            : 'Örn: Üretim emri #89'
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
 
-                {/* Önizleme */}
-                {stockQuantity > 0 && (
-                  <div
-                    className={`rounded-lg p-3 mb-4 border ${
-                      stockType === 'giris'
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-red-50 border-red-200'
-                    }`}
-                  >
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Yeni stok:</span>
-                      <span
-                        className={`font-bold ${
-                          stockType === 'giris' ? 'text-green-700' : 'text-red-700'
+                    {/* Referans */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Referans No (Opsiyonel)
+                      </label>
+                      <input
+                        type="text"
+                        value={stockReference}
+                        onChange={(e) => setStockReference(e.target.value)}
+                        placeholder="Örn: IRS-2026-0142"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+
+                    {/* Önizleme */}
+                    {stockQuantity > 0 && (
+                      <div
+                        className={`rounded-lg p-3 mb-4 border ${
+                          stockType === 'giris'
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-red-50 border-red-200'
                         }`}
                       >
-                        {stockItem.current_stock ?? 0}{' '}
-                        {stockType === 'giris' ? '+' : '−'} {stockQuantity} ={' '}
-                        {stockType === 'giris'
-                          ? (stockItem.current_stock ?? 0) + Number(stockQuantity)
-                          : Math.max(0, (stockItem.current_stock ?? 0) - Number(stockQuantity))}{' '}
-                        {stockItem.unit}
-                      </span>
-                    </div>
-                  </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Yeni stok:</span>
+                          <span
+                            className={`font-bold ${
+                              stockType === 'giris' ? 'text-green-700' : 'text-red-700'
+                            }`}
+                          >
+                            {stockItem.current_stock ?? 0}{' '}
+                            {stockType === 'giris' ? '+' : '−'} {stockQuantity} ={' '}
+                            {stockType === 'giris'
+                              ? (stockItem.current_stock ?? 0) + Number(stockQuantity)
+                              : Math.max(0, (stockItem.current_stock ?? 0) - Number(stockQuantity))}{' '}
+                            {stockItem.unit}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </form>
                 )}
+              </div>
 
-                {/* Butonlar */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
+              {/* Alt Butonlar - Sabit */}
+              {!stockSuccess && (
+                <div className="flex gap-3 p-4 sm:p-5 border-t border-gray-200 flex-shrink-0 bg-gray-50 rounded-b-2xl">
                   <button
                     type="button"
                     onClick={() => setShowStockModal(false)}
-                    className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
                   >
                     İptal
                   </button>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleStockSubmit}
                     className={`flex-1 text-white px-4 py-2.5 rounded-lg transition flex items-center justify-center gap-2 font-medium shadow-sm ${
                       stockType === 'giris'
                         ? 'bg-green-600 hover:bg-green-700'
@@ -780,8 +777,8 @@ export default function Items() {
                     )}
                   </button>
                 </div>
-              </form>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
